@@ -1,0 +1,22 @@
+{
+  "router": {
+    "port": "80",
+    "Handlers": [
+      {
+        "SubDomain": "localhost",
+        "path": "http://localhost:3000",
+        "Regex": "^\/$|/v1/*"
+      },
+      {
+        "SubDomain": "example-a.localhost",
+        "path": "http://localhost:3001",
+        "Regex": "^\/$|/v1/*|/public/*"
+      },
+      {
+        "SubDomain": "example-b.localhost",
+        "path": "http://localhost:3002",
+        "Regex": "^\/$|/*"
+      }
+    ]
+  }
+}
