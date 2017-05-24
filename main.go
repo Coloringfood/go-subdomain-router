@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
 	"regexp"
-	"net/url"
-	"net/http/httputil"
 )
 
 /**
 START JSON Import outline
- */
+*/
 type JsonRoot struct {
 	Router Router
 }
@@ -26,15 +26,16 @@ type Router struct {
 type Handler struct {
 	SubDomain string
 	Path      string
-	Regex	  string
+	Regex     string
 }
+
 /**
 END JSON Import outline
- */
+*/
 
 /**
 Start Proxy Objects
- */
+*/
 type Prox struct {
 	target        *url.URL
 	proxy         *httputil.ReverseProxy
@@ -57,7 +58,6 @@ func (p *Prox) handle(w http.ResponseWriter, r *http.Request) {
 
 func (p *Prox) parseWhiteList(r *http.Request) bool {
 	for _, target_regexp := range p.routePatterns {
-		fmt.Println(r.URL.Path)
 		if target_regexp.MatchString(r.URL.Path) {
 			return true
 		}
@@ -65,17 +65,17 @@ func (p *Prox) parseWhiteList(r *http.Request) bool {
 	fmt.Println("Not accepted routes ", r.URL.Path)
 	return false
 }
+
 /**
 End Proxy Objects
- */
+*/
 
 func HttpHandler(w http.ResponseWriter, r *http.Request, router Router) {
 	originalDomain := r.Host
 	var handler Handler
-	fmt.Println(originalDomain)
+	fmt.Println(originalDomain, r.URL.Path)
 
 	for _, v := range router.Handlers {
-		fmt.Println(v)
 		if v.SubDomain == originalDomain {
 			handler = v
 		}
@@ -85,7 +85,6 @@ func HttpHandler(w http.ResponseWriter, r *http.Request, router Router) {
 		fmt.Printf("subdomain not defined %s", originalDomain)
 		return
 	}
-	fmt.Println(handler)
 
 	//
 	reg, _ := regexp.Compile(handler.Regex)
@@ -106,7 +105,7 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		HttpHandler(w, r, Router)
 	})
-	err := http.ListenAndServe(":" + Router.Port, nil)
+	err := http.ListenAndServe(":"+Router.Port, nil)
 	if err == nil {
 		fmt.Println("Successfully loaded")
 	} else {
