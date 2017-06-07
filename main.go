@@ -98,9 +98,24 @@ func HttpHandler(w http.ResponseWriter, r *http.Request, router Router) {
 
 }
 
+// Skimmed from https://gist.github.com/d-schmidt/587ceec34ce1334a5e60
+//func redirect(w http.ResponseWriter, req *http.Request) {
+//	// remove/add not default ports from req.Host
+//	target := "https://" + req.Host + req.URL.Path
+//	if len(req.URL.RawQuery) > 0 {
+//		target += "?" + req.URL.RawQuery
+//	}
+//	fmt.Printf("redirect to: %s", target)
+//	http.Redirect(w, req, target,
+//		http.StatusTemporaryRedirect)
+//}
+
 func main() {
 	Router := readConfig()
 	fmt.Printf("listening on port: %v\n", Router.Port)
+
+	// redirect every http request to https
+	//go http.ListenAndServe(":80", http.HandlerFunc(redirect))
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		HttpHandler(w, r, Router)
