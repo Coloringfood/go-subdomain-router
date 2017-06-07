@@ -113,7 +113,7 @@ func redirectToHttps(w http.ResponseWriter, r *http.Request) {
 		target += "?" + r.URL.RawQuery
 	}
 	fmt.Printf("redirect to: %s", target)
-	http.Redirect(w, r, target, http.StatusMovedPermanently)
+	http.Redirect(w, r, target, http.StatusTemporaryRedirect)
 }
 
 func main() {
@@ -123,13 +123,13 @@ func main() {
 	if Config.Certs.Key != "" {
 		// redirect every http request to https
 		fmt.Printf("forwarding on port: %v\n", Config.Router.Port)
-		go http.ListenAndServe(":" + Config.Router.Ssl_port, http.HandlerFunc(redirectToHttps))
+		go http.ListenAndServe(":" + Config.Router.Port, http.HandlerFunc(redirectToHttps))
 
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			HttpHandler(w, r, Config.Router)
 		})
 		fmt.Printf("listening SSL on port: %v\n", Config.Router.Ssl_port)
-		err = http.ListenAndServeTLS(":" + Config.Router.Port, Config.Certs.Cert, Config.Certs.Key, nil)
+		err = http.ListenAndServeTLS(":" + Config.Router.Ssl_port, Config.Certs.Cert, Config.Certs.Key, nil)
 	} else {
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			HttpHandler(w, r, Config.Router)
