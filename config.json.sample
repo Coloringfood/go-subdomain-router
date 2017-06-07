@@ -1,6 +1,7 @@
 {
   "router": {
     "port": "80",
+    "ssl_port": "443"
     "Handlers": [
       {
         "SubDomain": "localhost",
@@ -18,5 +19,9 @@
         "Regex": "^\/$|/*"
       }
     ]
+  },
+  "certs": {
+    "cert": "cert.pem",
+    "key": "key.pem"
   }
 }

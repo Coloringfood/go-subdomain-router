@@ -16,10 +16,17 @@ START JSON Import outline
 */
 type JsonRoot struct {
 	Router Router
+	Certs  Certs
+}
+
+type Certs struct {
+	Cert string
+	Key  string
 }
 
 type Router struct {
 	Port     string
+	Ssl_port string
 	Handlers []Handler
 }
 
@@ -110,16 +117,26 @@ func redirectToHttps(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	Router := readConfig()
-	fmt.Printf("listening on port: %v\n", Router.Port)
+	Config := readConfig()
+	var err error = nil;
 
-	// redirect every http request to https
-	go http.ListenAndServe(":80", http.HandlerFunc(redirectToHttps))
+	if Config.Certs.Key != "" {
+		// redirect every http request to https
+		fmt.Printf("forwarding on port: %v\n", Config.Router.Port)
+		go http.ListenAndServe(":" + Config.Router.Ssl_port, http.HandlerFunc(redirectToHttps))
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		HttpHandler(w, r, Router)
-	})
-	err := http.ListenAndServe(":"+Router.Port, nil)
+		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			HttpHandler(w, r, Config.Router)
+		})
+		fmt.Printf("listening SSL on port: %v\n", Config.Router.Ssl_port)
+		err = http.ListenAndServeTLS(":" + Config.Router.Port, Config.Certs.Cert, Config.Certs.Key, nil)
+	} else {
+		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			HttpHandler(w, r, Config.Router)
+		})
+		fmt.Printf("listening on port: %v\n", Config.Router.Port)
+		err = http.ListenAndServe(":" + Config.Router.Port, nil)
+	}
 	if err == nil {
 		fmt.Println("Successfully loaded")
 	} else {
@@ -128,7 +145,7 @@ func main() {
 }
 
 // readConfig reads configuration file written in json format, returns the Router struct
-func readConfig() Router {
+func readConfig() JsonRoot {
 	file, e := ioutil.ReadFile("./config.json")
 	if e != nil {
 		fmt.Printf("File error: %v\n", e)
@@ -136,5 +153,5 @@ func readConfig() Router {
 	}
 	var root JsonRoot
 	json.Unmarshal(file, &root)
-	return root.Router
+	return root
 }
